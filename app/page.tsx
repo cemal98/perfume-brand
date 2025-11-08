@@ -3,16 +3,18 @@
 import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import Lenis from "lenis";
+import Lenis from "lenis"; // Smooth scroll için
 import LoadingScreen from "@/components/LoadingScreen";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ParallaxText from "@/components/ParallaxText";
 import Collection from "@/components/Collection";
 
-// Dynamic import for Canvas (client-only, prevents SSR issues)
+// HeroCanvas'ı sadece client tarafında yüklüyoruz.
+// Bu, Next.js'te SSR (Server-Side Rendering) hatalarını önler.
 const HeroCanvas = dynamic(() => import("@/components/HeroCanvas"), {
   ssr: false,
+  // Canvas yüklenirken boş bir siyah alan gösterilir.
   loading: () => <div className="w-full h-full bg-luxury-black" />,
 });
 
@@ -21,37 +23,36 @@ export default function Home() {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [scrollValue, setScrollValue] = useState(0);
 
-  // Smooth scrolling with Lenis + scroll tracking
+  // Lenis ile yumuşak kaydırma efekti ve scroll pozisyonu takibi
   useEffect(() => {
     const lenis = new Lenis({
       duration: 1.2,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-      orientation: "vertical",
-      gestureOrientation: "vertical",
-      smoothWheel: true,
-      wheelMultiplier: 1,
     });
 
-    // Track scroll position with Lenis
+    // Lenis'in 'scroll' olayını dinleyerek scroll pozisyonunu state'e yazıyoruz.
+    // Değeri 1000'e bölerek şişe animasyonu için daha kullanışlı bir aralığa getiriyoruz.
     lenis.on("scroll", ({ scroll }: { scroll: number }) => {
       setScrollValue(Math.min(scroll / 1000, 1));
     });
 
+    // Animasyon döngüsü
     function raf(time: number) {
       lenis.raf(time);
       requestAnimationFrame(raf);
     }
-
     requestAnimationFrame(raf);
 
+    // Component kaldırıldığında Lenis'i temizle
     return () => {
       lenis.destroy();
     };
   }, []);
 
-  // Mouse position tracking for bottle interaction
+  // Fare pozisyonunu takip etme (şişe etkileşimi için)
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
+      // Fare pozisyonunu -1 ile 1 arasında bir değere normalleştiriyoruz.
       const x = (e.clientX / window.innerWidth) * 2 - 1;
       const y = (e.clientY / window.innerHeight) * 2 - 1;
       setMousePosition({ x, y });
@@ -61,13 +62,14 @@ export default function Home() {
     return () => window.removeEventListener("mousemove", handleMouseMove);
   }, []);
 
-
+  // Yükleme ekranı mantığı
   if (isLoading) {
     return <LoadingScreen onComplete={() => setIsLoading(false)} />;
   }
 
+  // Ana sayfa içeriği
   return (
-    <main className="relative">
+    <main className="relative bg-luxury-black">
       <Navbar />
 
       {/* Hero Section */}
@@ -75,15 +77,27 @@ export default function Home() {
         id="hero"
         className="min-h-screen flex items-center justify-center relative overflow-hidden"
       >
-        {/* Background gradient */}
+        {/* Arka plan */}
         <div className="absolute inset-0 bg-gradient-to-b from-luxury-black via-luxury-black to-luxury-black/80" />
 
-        {/* 3D Bottle Container */}
+        {/* 
+          MOBİL SCROLL ÇÖZÜMÜ - ADIM 1:
+          3D Canvas'ı saran bu div, mobil cihazlarda dokunma olaylarını yok sayar (pointer-events-none),
+          böylece parmağınız şişenin üzerindeyken bile sayfa kaydırılabilir.
+          Masaüstünde ise fare etkileşimi için olayları tekrar aktif eder (md:pointer-events-auto).
+        */}
         <div className="absolute inset-0 z-0 pointer-events-none md:pointer-events-auto">
-            <HeroCanvas scrollY={scrollValue} mousePosition={mousePosition} />
+          <HeroCanvas scrollY={scrollValue} mousePosition={mousePosition} />
         </div>
-        {/* Hero Text */}
-        <div className="relative z-10 text-center px-6 md:px-12">
+
+        {/* 
+          MOBİL SCROLL ÇÖZÜMÜ - ADIM 2:
+          Aynı şekilde, metinleri içeren bu div'e de 'pointer-events-none' ekliyoruz.
+          Bu, metinlerin de mobil kaydırmayı engellememesini sağlar.
+          Masaüstünde fareyle metin seçimi gibi özellikler engellense de,
+          bu tasarımda kaydırma öncelikli olduğu için bu kabul edilebilir bir durumdur.
+        */}
+        <div className="relative z-10 text-center px-6 md:px-12 pointer-events-none">
           <motion.h1
             className="text-6xl md:text-8xl lg:text-9xl font-serif text-luxury-gold mb-6"
             initial={{ opacity: 0, y: 50 }}
@@ -104,7 +118,7 @@ export default function Home() {
           </ParallaxText>
         </div>
 
-        {/* Scroll indicator */}
+        {/* Aşağı kaydırma animasyonu */}
         <motion.div
           className="absolute bottom-10 left-1/2 transform -translate-x-1/2"
           animate={{ y: [0, 10, 0] }}
@@ -223,4 +237,3 @@ export default function Home() {
     </main>
   );
 }
-
