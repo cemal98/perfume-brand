@@ -79,10 +79,9 @@ export default function Home() {
         <div className="absolute inset-0 bg-gradient-to-b from-luxury-black via-luxury-black to-luxury-black/80" />
 
         {/* 3D Bottle Container */}
-        <div className="absolute inset-0 w-full h-full">
-          <HeroCanvas scrollY={scrollValue} mousePosition={mousePosition} />
+        <div className="absolute inset-0 z-0 pointer-events-none md:pointer-events-auto">
+            <HeroCanvas scrollY={scrollValue} mousePosition={mousePosition} />
         </div>
-
         {/* Hero Text */}
         <div className="relative z-10 text-center px-6 md:px-12">
           <motion.h1
