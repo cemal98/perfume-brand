@@ -30,3 +30,33 @@
   }
 }
 
+/* ÖNCEKİ @media bloğunu bu yenisiyle DEĞİŞTİRİN */
+
+@media (max-width: 767px) {
+  /*
+    React-Three-Fiber, 3D sahne ile etkileşim için dokunma olaylarını
+    kendisi yönetmek ister. Bunu yapmak için hem canvas'ın container'ına
+    'touch-action: none' stili ekler, hem de canvas'ın kendisi olayları yakalar.
+    
+    Mobil cihazlarda kaydırmayı tekrar aktif hale getirmek için bu iki
+    davranışı da geçersiz kılmalıyız.
+  */
+
+  /* 
+    1. ADIM: Canvas'ı saran ve kaydırmayı asıl engelleyen DIV'i hedef alıyoruz.
+    HTML çıktınızda bu div, `.z-0` class'lı div'in hemen içinde yer alıyor.
+  */
+  #hero .z-0 > div {
+    /* 'touch-action: none' stilini ezip tarayıcının normal kaydırmasına izin veriyoruz. */
+    /* '!important' kuralı, inline stili ezmemizi garantiler. */
+    touch-action: auto !important;
+  }
+  
+  /* 
+    2. ADIM: Her ihtimale karşı canvas'ın kendisini de dokunma olaylarına 
+    karşı tamamen şeffaf yapmaya devam ediyoruz.
+  */
+  #hero canvas {
+    pointer-events: none !important;
+  }
+}
